@@ -4,4 +4,14 @@
         <TargetFramework>netstandard2.0</TargetFramework>
     </PropertyGroup>
 
+    <ItemGroup>
+      <Folder Include="Extensibility" />
+      <Folder Include="Network" />
+    </ItemGroup>
+
+    <ItemGroup>
+      <PackageReference Include="OptimizedPriorityQueue" Version="4.2.0" />
+      <PackageReference Include="System.Numerics.Vectors" Version="4.5.0" />
+    </ItemGroup>
+
 </Project>
