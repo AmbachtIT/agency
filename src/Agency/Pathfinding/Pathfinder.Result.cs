@@ -7,10 +7,11 @@
         {
             public string Type { get; set; }
             public float Distance { get; set; }
+            public int NodeCount { get; set; }
 
             public override string ToString()
             {
-                return $"{Type}: {Distance:0.0}m";
+                return $"{Type}: {Distance:0.0}m, {NodeCount} nodes";
             }
         }
         

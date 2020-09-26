@@ -19,49 +19,33 @@ namespace Agency.Pathfinding
 		/// </summary>
 		public Node Destination { get; set; }
 
-		public DateTime DepartureTime { get; set; }
+		public float? MaximumAcceptableCost { get; set; }
 
-		public TimeSpan? MaximumAcceptableDuration { get; set; }
-
-		/// <summary>
-		/// Calculates the cost of taking the second Edge when coming from the first edge through te Node
-		/// </summary>
-		public Func<Edge, Node, Edge, DateTime, TimeSpan> CalculateCost = DefaultCalculateCost;
-
-		private static TimeSpan DefaultCalculateCost(Edge edgeFrom, Node from, Edge edge, DateTime when)
-		{
-			return DefaultEstimateMinimumCost(edge.From, edge.To);
-		}
 		
-		public Func<Node, Node, TimeSpan> EstimateMinimumCost = DefaultEstimateMinimumCost;
+		public Func<Node, Node, float> EstimateMinimumCost = DefaultEstimateMinimumCost;
 		
-		private static TimeSpan DefaultEstimateMinimumCost(Node from, Node to)
+		private static float DefaultEstimateMinimumCost(Node from, Node to)
 		{
-			return TimeSpan.FromSeconds(Vector2.Distance(from.Location, to.Location));
+			return Vector2.Distance(from.Location, to.Location);
 		}
-
-
-		//public Modality Modality { get; set; }
-
 
 		/// <summary>
 		/// Intermediate result data
 		/// </summary>
 		public IntermediateResults Intermediate { get; set; }
 
-		//private PriorityQueue<DateTime, NodeVisit> fringe = new PriorityQueue<DateTime, NodeVisit>();
-		private SortedSet<NodeVisit> fringe; 
+		private IPriorityQueue<NodeVisit, float> fringe;
 
 		public Result Run()
 		{
 			Init();
-			while(fringe.Count > 0) {
+			while(fringe.Count > 0) 
+			{
 				Intermediate.Visited++;
-				var currentInfo = fringe.Min;
-				fringe.Remove(currentInfo);
-
-				if(MaximumAcceptableDuration.HasValue) {
-					if (Destination != null && currentInfo.HeuristicCostLeft > MaximumAcceptableDuration.Value)
+				var currentInfo = fringe.Dequeue();
+				if(MaximumAcceptableCost.HasValue) 
+				{
+					if (Destination != null && currentInfo.HeuristicCostLeft > MaximumAcceptableCost.Value)
 					{
 						// We are never gonna make it in time. Quit.
 						return new Result()
@@ -69,7 +53,7 @@ namespace Agency.Pathfinding
 							Type = "MaxDurationExceeded"
 						};
 					}
-					if(currentInfo.ArrivalTime > DepartureTime.Add(MaximumAcceptableDuration.Value))
+					if(currentInfo.Cost > MaximumAcceptableCost.Value)
 					{
 						return new Result()
 						{
@@ -82,7 +66,7 @@ namespace Agency.Pathfinding
 				{
 					currentInfo.Distance = currentInfo.PredecessingNodeVisit.Distance + currentInfo.PredecessingEdge.Distance;
 				}
-				currentInfo.Duration = currentInfo.ArrivalTime.Subtract(DepartureTime);
+				currentInfo.Duration = currentInfo.Cost;
 
 				var current = currentInfo.Node;
 				currentInfo.IsVisited = true;
@@ -93,34 +77,44 @@ namespace Agency.Pathfinding
 					return new Result()
 					{
 						Distance = (float)currentInfo.Distance,
-						Type = "ExactRouteFound"
+						Type = "ExactRouteFound",
+						NodeCount = currentInfo.NodeCount()
 					};
 				}
 
-				foreach(Edge edge in GetApplicableNeighbours(current, currentInfo.PredecessingEdge)) {
-					Node neighbour = edge.GetOtherEnd(current);
-					NodeVisit neighbourVisit = Intermediate.GetInfo(neighbour);
-
-					TimeSpan edgeCost = CalculateCost(currentInfo.PredecessingEdge, current, edge, currentInfo.ArrivalTime);
-					DateTime tentativeArrival = currentInfo.ArrivalTime.Add(edgeCost);
-					bool better = false;
-					if(neighbourVisit == null) {
-						neighbourVisit = new NodeVisit() {
-							Node = neighbour,
-							HeuristicCostLeft = EstimateMinimumCost(neighbour, Destination)
-						};
-						Intermediate.Vertices.AddVisit(neighbour.Id, neighbourVisit);
-						better = true;
-					} else if(tentativeArrival < neighbourVisit.ArrivalTime)
+				for (var e = 0; e < current.Edges.Count; e++)
+				{
+					var edge = current.Edges[e];
+					var neighbour = edge.To;
+					var neighbourVisit = Intermediate.Vertices.GetVisit(neighbour.Id);
+					if (neighbourVisit == null || !neighbourVisit.IsVisited)
 					{
-						fringe.Remove(neighbourVisit);
-						better = true;
-					}
-					if(better) {
-						neighbourVisit.PredecessingEdge = edge;
-						neighbourVisit.PredecessingNodeVisit = currentInfo;
-						neighbourVisit.ArrivalTime = tentativeArrival;
-						fringe.Add(neighbourVisit);
+						var edgeCost = edge.Distance;
+						var tentativeCost = currentInfo.Cost + edgeCost;
+						var added = false;
+						if (neighbourVisit == null)
+						{
+							added = true;
+							neighbourVisit = new NodeVisit() {
+								Node = neighbour,
+								HeuristicCostLeft = EstimateMinimumCost(neighbour, Destination)
+							};
+							Intermediate.Vertices.AddVisit(neighbour.Id, neighbourVisit);
+						}
+						if (added || tentativeCost < neighbourVisit.Cost)
+						{
+							neighbourVisit.PredecessingEdge = edge;
+							neighbourVisit.PredecessingNodeVisit = currentInfo;
+							neighbourVisit.Cost = tentativeCost;
+							if (added)
+							{
+								fringe.Enqueue(neighbourVisit, neighbourVisit.EstimatedArrivalAtDestination);
+							}
+							else
+							{
+								fringe.UpdatePriority(neighbourVisit, neighbourVisit.EstimatedArrivalAtDestination);
+							}
+						}
 					}
 				}
 
@@ -143,25 +137,9 @@ namespace Agency.Pathfinding
 			//this.Result = Route.FromNodeInfo(Intermediate.GetInfo(Start), Intermediate.GetInfo(destination));
 		}
 
-		private IEnumerable<Edge> GetApplicableNeighbours(Node current, Edge predecessingEdge) {
-			foreach(var edge in GetNeighbours(current)) {
-				var info = Intermediate.GetInfo(edge.GetOtherEnd(current));
-				if(info == null || !info.IsVisited) {
-					yield return edge;
-				}
-			}
-		}
-
-		public Func<Node, IEnumerable<Edge>> GetNeighbours = DefaultGetNeighbours;
-
-		private static IEnumerable<Edge> DefaultGetNeighbours(Node current) {
-			return current.Edges;
-		}
-
-
 
 		private void Init() {
-			this.fringe = new SortedSet<NodeVisit>(this);
+			this.fringe = new FastPriorityQueue<NodeVisit>(Network.Nodes.Count);
 			this.Intermediate = new IntermediateResults
 			                    {
 			                    	Vertices = CreateNodeVisitContainer()
@@ -169,26 +147,20 @@ namespace Agency.Pathfinding
 
 			if(Destination == null)
 			{
-				EstimateMinimumCost = (v1, v2) => TimeSpan.Zero; // This means the algorithm degrades to a mundane Dijkstra shortest path
+				EstimateMinimumCost = (v1, v2) => 0f; // This means the algorithm degrades to a mundane Dijkstra shortest path
 			}
 
 			var start = new NodeVisit() {
 				Node = this.Start,
-				ArrivalTime = this.DepartureTime,
-				Duration = TimeSpan.Zero,
+				Duration = 0,
 				Distance = 0,
 				HeuristicCostLeft = EstimateMinimumCost(this.Start, this.Destination)
 			};
 			Intermediate.Vertices.AddVisit(this.Start.Id, start);
-			fringe.Add(start);
+			fringe.Enqueue(start, 0f);
 		}
 
-		public Func<INodeVisitContainer> CreateNodeVisitContainer = () => new NodeVisitDictionary();
-		
-		public NodeVisit GetNodeVisitData(Node Node)
-		{
-			return Intermediate.Vertices.GetVisit(Node.Id);
-		}
+		private Func<NodeVisitArray> CreateNodeVisitContainer = null;
 
 		public class IntermediateResults
 		{
@@ -198,12 +170,7 @@ namespace Agency.Pathfinding
 			/// </summary>
 			public int Visited { get; set; }
 
-			public NodeVisit GetInfo(Node Node)
-			{
-				return Vertices.GetVisit(Node.Id);
-			}
-
-			public INodeVisitContainer Vertices { get; set; }
+			public NodeVisitArray Vertices { get; set; }
 		}
 
 
@@ -294,6 +261,10 @@ namespace Agency.Pathfinding
 
 		public void SetNetwork(Network network)
 		{
+			this.Network = network;
+			this.CreateNodeVisitContainer = () => new NodeVisitArray(network.Nodes.Max(n => n.Id) + 1);
 		}
+
+		public Network Network { get; set; }
 	}
 }

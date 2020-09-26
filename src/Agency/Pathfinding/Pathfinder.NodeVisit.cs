@@ -1,4 +1,5 @@
 ﻿using System;
+using Priority_Queue;
 
 namespace Agency.Pathfinding
 {
@@ -7,31 +8,24 @@ namespace Agency.Pathfinding
 		/// <summary>
 		/// Contains information retained for each RouteNode by the algorithm
 		/// </summary>
-		public class NodeVisit
+		public class NodeVisit : FastPriorityQueueNode
 		{
 			public Node Node { get; internal set; }
 
 			/// <summary>
-			/// Earliest known arrival time
+			/// Earliest known arrival time (g)
 			/// </summary>
-			public DateTime ArrivalTime { get; internal set; } // g_score
+			public float Cost { get; internal set; }
 
 			/// <summary>
 			/// Minimal estimate of arrival at destination via this Node
 			/// </summary>
-			internal DateTime EstimatedArrivalAtDestination
-			{
-				get
-				{
-
-					return this.ArrivalTime + this.HeuristicCostLeft;
-				}
-			}
+			internal float EstimatedArrivalAtDestination => Cost + HeuristicCostLeft;
 
 			/// <summary>
 			/// Estimated total cost to reach the destination. Should ALWAYS underestimate the total time.
 			/// </summary>
-			internal TimeSpan HeuristicCostLeft;
+			internal float HeuristicCostLeft;
 
 			public bool IsVisited { get; internal set; }
 			public NodeVisit PredecessingNodeVisit { get; internal set; }
@@ -40,9 +34,14 @@ namespace Agency.Pathfinding
 			/// <summary>
 			/// Covered distance (in m)
 			/// </summary>
-			public double Distance { get; internal set; }
+			public float Distance { get; internal set; }
 
-			public TimeSpan Duration { get; internal set; }
+			public float Duration { get; internal set; }
+
+			public int NodeCount()
+			{
+				return (PredecessingNodeVisit?.NodeCount() ?? 0) + 1;
+			}
 		}
         
     }
