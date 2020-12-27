@@ -14,31 +14,35 @@ namespace Agency.Test.Performance
         public void TestPathfinder()
         {
             var map = LoadMap();
+            TestContext.WriteLine($"Testing map with {map.Vertices.Count} vertices");
             var network = CreateNetwork(map, RoadRunner.Modality.Walk);
             var pathfinder = new Pathfinder();
             pathfinder.SetNetwork(network);
             for (var j = 0; j < 2; j++)
             {
+                var total = TimeSpan.Zero;
                 var random = new Random(19681);
-                var start = DateTime.UtcNow;
                 for (var i = 0; i < 100; i++)
                 {
                     pathfinder.Start = network.Nodes.PickRandom(random);
                     pathfinder.Destination = network.Nodes.PickRandom(random);
+                    var start = DateTime.UtcNow;
                     var result = pathfinder.Run();
+                    var duration = DateTime.UtcNow - start;
+                    total += duration;
                     if (j == 1)
                     {
-                        TestContext.WriteLine($"{i}: {result}");
+                        TestContext.WriteLine($"{i}: {result}. Took {duration.TotalMilliseconds:0.0}ms");
                     }                    
                     if (distances.TryGetValue(i, out var correct))
                     {
                         Assert.AreEqual(correct, (int)Math.Round(result.Distance));
                     }
                 }
-                var duration = DateTime.UtcNow - start;
+                
                 if (j == 1)
                 {
-                    TestContext.WriteLine($"{duration.TotalSeconds:0.000}s");
+                    TestContext.WriteLine($"{total.TotalMilliseconds:0.0}ms");
                 }
             }
         }
