@@ -3,14 +3,14 @@ using Priority_Queue;
 
 namespace Agency.Pathfinding
 {
-    public partial class Pathfinder
+    public partial class Pathfinder<TNode, TEdge>
     {
 		/// <summary>
 		/// Contains information retained for each RouteNode by the algorithm
 		/// </summary>
 		public class NodeVisit : FastPriorityQueueNode
 		{
-			public Node Node { get; internal set; }
+			public TNode Node { get; internal set; }
 
 			/// <summary>
 			/// Earliest known arrival time (g)
@@ -29,14 +29,7 @@ namespace Agency.Pathfinding
 
 			public bool IsVisited { get; internal set; }
 			public NodeVisit PredecessingNodeVisit { get; internal set; }
-			public Edge PredecessingEdge { get; internal set; } // predecessor for fastest known route
-
-			/// <summary>
-			/// Covered distance (in m)
-			/// </summary>
-			public float Distance { get; internal set; }
-
-			public float Duration { get; internal set; }
+			public TEdge PredecessingEdge { get; internal set; } // predecessor for fastest known route
 
 			public int NodeCount()
 			{

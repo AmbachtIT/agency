@@ -1,6 +1,6 @@
 ﻿namespace Agency.Pathfinding
 {
-    public partial class Pathfinder
+    public partial class Pathfinder<TNode, TEdge>
     {
 
         public class Result

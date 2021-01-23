@@ -9,25 +9,30 @@ namespace Agency.Pathfinding
     /// <summary>
 	/// Implements A*
 	/// </summary>
-	public partial class Pathfinder : IComparer<Pathfinder.NodeVisit>
+	public partial class Pathfinder<TNode, TEdge>
+	    : IComparer<Pathfinder<TNode, TEdge>.NodeVisit>
+	    where TNode: class
 	{
+		
+		public Pathfinder(NetworkAdapter network)
+		{
+			this.network = network;
+			this.CreateNodeVisitContainer = () => new NodeVisitArray(network.MaxId());
+		}
 
-		public Node Start { get; set; }
+		private readonly NetworkAdapter network;
+
+
+		public TNode Start { get; set; }
 
 		/// <summary>
 		/// The destination Node, or null for a full search
 		/// </summary>
-		public Node Destination { get; set; }
+		public TNode Destination { get; set; }
 
 		public float? MaximumAcceptableCost { get; set; }
 
-		
-		public Func<Node, Node, float> EstimateMinimumCost = DefaultEstimateMinimumCost;
-		
-		private static float DefaultEstimateMinimumCost(Node from, Node to)
-		{
-			return Vector2.Distance(from.Location, to.Location);
-		}
+
 
 		/// <summary>
 		/// Intermediate result data
@@ -62,12 +67,6 @@ namespace Agency.Pathfinding
 					}
 				}
 
-				if(currentInfo.PredecessingEdge != null)
-				{
-					currentInfo.Distance = currentInfo.PredecessingNodeVisit.Distance + currentInfo.PredecessingEdge.Distance;
-				}
-				currentInfo.Duration = currentInfo.Cost;
-
 				var current = currentInfo.Node;
 				currentInfo.IsVisited = true;
 				if (current == Destination)
@@ -76,20 +75,19 @@ namespace Agency.Pathfinding
 					CreateRoute(Destination);
 					return new Result()
 					{
-						Distance = (float)currentInfo.Distance,
 						Type = "ExactRouteFound",
 						NodeCount = currentInfo.NodeCount()
 					};
 				}
 
-				for (var e = 0; e < current.Edges.Count; e++)
+				foreach (var edge in network.GetEdges(current))
 				{
-					var edge = current.Edges[e];
-					var neighbour = edge.To;
-					var neighbourVisit = Intermediate.Vertices.GetVisit(neighbour.Id);
+					var neighbour = network.GetOtherNode(edge, current);
+					var neighbourId = network.GetNodeId(neighbour);
+					var neighbourVisit = Intermediate.Vertices.GetVisit(neighbourId);
 					if (neighbourVisit == null || !neighbourVisit.IsVisited)
 					{
-						var edgeCost = edge.Distance;
+						var edgeCost = network.GetCost(edge);
 						var tentativeCost = currentInfo.Cost + edgeCost;
 						var added = false;
 						if (neighbourVisit == null)
@@ -97,9 +95,9 @@ namespace Agency.Pathfinding
 							added = true;
 							neighbourVisit = new NodeVisit() {
 								Node = neighbour,
-								HeuristicCostLeft = EstimateMinimumCost(neighbour, Destination)
+								HeuristicCostLeft = network.EstimateMinimumCost(neighbour, Destination)
 							};
-							Intermediate.Vertices.AddVisit(neighbour.Id, neighbourVisit);
+							Intermediate.Vertices.AddVisit(neighbourId, neighbourVisit);
 						}
 						if (added || tentativeCost < neighbourVisit.Cost)
 						{
@@ -117,7 +115,6 @@ namespace Agency.Pathfinding
 						}
 					}
 				}
-
 			}
 
 			if(Destination == null)
@@ -133,30 +130,24 @@ namespace Agency.Pathfinding
 			};
 		}
 
-		private void CreateRoute(Node destination) {
+		private void CreateRoute(TNode destination) {
 			//this.Result = Route.FromNodeInfo(Intermediate.GetInfo(Start), Intermediate.GetInfo(destination));
 		}
 
 
 		private void Init() {
-			this.fringe = new FastPriorityQueue<NodeVisit>(Network.Nodes.Count);
+			this.fringe = new FastPriorityQueue<NodeVisit>(network.MaxId());
 			this.Intermediate = new IntermediateResults
 			                    {
 			                    	Vertices = CreateNodeVisitContainer()
 			                    };
 
-			if(Destination == null)
-			{
-				EstimateMinimumCost = (v1, v2) => 0f; // This means the algorithm degrades to a mundane Dijkstra shortest path
-			}
 
 			var start = new NodeVisit() {
 				Node = this.Start,
-				Duration = 0,
-				Distance = 0,
-				HeuristicCostLeft = EstimateMinimumCost(this.Start, this.Destination)
+				HeuristicCostLeft = network.EstimateMinimumCost(this.Start, this.Destination)
 			};
-			Intermediate.Vertices.AddVisit(this.Start.Id, start);
+			Intermediate.Vertices.AddVisit(network.GetNodeId(this.Start), start);
 			fringe.Enqueue(start, 0f);
 		}
 
@@ -254,17 +245,9 @@ namespace Agency.Pathfinding
 			var result = x.EstimatedArrivalAtDestination.CompareTo(y.EstimatedArrivalAtDestination);
 			if(result == 0)
 			{
-				result = x.Node.Id.CompareTo(y.Node.Id);
+				result = network.GetNodeId(x.Node).CompareTo(network.GetNodeId(y.Node));
 			}
 			return result;
 		}
-
-		public void SetNetwork(Network network)
-		{
-			this.Network = network;
-			this.CreateNodeVisitContainer = () => new NodeVisitArray(network.Nodes.Max(n => n.Id) + 1);
-		}
-
-		public Network Network { get; set; }
 	}
 }
