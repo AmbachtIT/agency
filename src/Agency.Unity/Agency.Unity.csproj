@@ -13,5 +13,8 @@
         <HintPath>..\..\lib\UnityEngine.CoreModule.dll</HintPath>
       </Reference>
     </ItemGroup>
-
+    
+    <PropertyGroup>
+        <PostBuildEvent>xcopy /Y Agency*.dll ..\..\..\..\..\unity\Agency\Assets\</PostBuildEvent>
+    </PropertyGroup>
 </Project>
