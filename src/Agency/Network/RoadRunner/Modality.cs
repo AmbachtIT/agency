@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace Agency.Test.Performance.RoadRunner
+namespace Agency.Network.RoadRunner
 {
 	
 	/// <summary>

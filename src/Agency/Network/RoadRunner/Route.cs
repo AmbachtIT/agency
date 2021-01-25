@@ -4,7 +4,7 @@ using System.Linq;
 using System.IO;
 using System.Xml.Serialization;
 
-namespace Agency.Test.Performance.RoadRunner {
+namespace Agency.Network.RoadRunner {
 
 	public class Route {
 

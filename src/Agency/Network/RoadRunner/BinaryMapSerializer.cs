@@ -4,7 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace Agency.Test.Performance.RoadRunner
+namespace Agency.Network.RoadRunner
 {
 	public class BinaryMapSerializer
 	{

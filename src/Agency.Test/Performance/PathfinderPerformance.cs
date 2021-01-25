@@ -4,7 +4,9 @@ using System.Linq;
 using System.Numerics;
 using Agency.Common;
 using Agency.Pathfinding;
+using Agency.Network.RoadRunner;
 using NUnit.Framework;
+using Edge = Agency.Pathfinding.Edge;
 
 namespace Agency.Test.Performance
 {
@@ -16,7 +18,7 @@ namespace Agency.Test.Performance
         {
             var map = LoadMap();
             TestContext.WriteLine($"Testing map with {map.Vertices.Count} vertices");
-            var network = CreateNetwork(map, RoadRunner.Modality.Walk);
+            var network = CreateNetwork(map, Modality.Walk);
             var pathfinder = new Pathfinder<Node, Edge>(CreateAdapter(network));
             for (var j = 0; j < 2; j++)
             {
@@ -60,7 +62,7 @@ namespace Agency.Test.Performance
             { 9, 12437 },
         };
 
-        private Pathfinder<Node, Edge>.NetworkAdapter CreateAdapter(Network network)
+        private Pathfinder<Node, Edge>.NetworkAdapter CreateAdapter(Pathfinding.Network network)
         {
             return new Pathfinder<Node, Edge>.NetworkAdapter()
             {
@@ -73,7 +75,7 @@ namespace Agency.Test.Performance
             };
         }
         
-        private Network CreateNetwork(RoadRunner.RouteMap map, RoadRunner.Modality modality)
+        private Pathfinding.Network CreateNetwork(RouteMap map, Modality modality)
         {
             var nodes =
                 map
@@ -83,7 +85,7 @@ namespace Agency.Test.Performance
                         Id = v.Id,
                         Location = v.Location
                     });
-            var result = new Network()
+            var result = new Pathfinding.Network()
             {
                 Nodes = nodes.Values.ToList()
             };
@@ -92,12 +94,12 @@ namespace Agency.Test.Performance
             {
                 if (modality.IsAccessible(edge))
                 {
-                    result.Edges.Add(new Edge(nodes[edge.FromId], nodes[edge.ToId])
+                    result.Edges.Add(new Pathfinding.Edge(nodes[edge.FromId], nodes[edge.ToId])
                     {
                         Id = result.Edges.Count + 1,
                         Distance = (float)edge.Distance,
                     });
-                    result.Edges.Add(new Edge(nodes[edge.ToId], nodes[edge.FromId])
+                    result.Edges.Add(new Pathfinding.Edge(nodes[edge.ToId], nodes[edge.FromId])
                     {
                         Id = result.Edges.Count + 1,
                         Distance = (float)edge.Distance,
@@ -108,9 +110,9 @@ namespace Agency.Test.Performance
             return result;
         }
 
-        private RoadRunner.RouteMap LoadMap()
+        private RouteMap LoadMap()
         {
-            return RoadRunner.RouteMap.LoadBinary(@"D:\Data\OpenFietsModel\Gemeentes\0344\RouteMap.bin");
+            return RouteMap.LoadBinary(@"D:\Data\OpenFietsModel\Gemeentes\0344\RouteMap.bin");
         }
     }
 }

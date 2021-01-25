@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace Agency.Test.Performance.RoadRunner
+namespace Agency.Network.RoadRunner
 {
 	public class WalkModality : Modality 
 	{

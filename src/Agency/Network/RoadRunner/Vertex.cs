@@ -5,7 +5,7 @@ using System.Numerics;
 using System.Text;
 using System.Xml.Serialization;
 
-namespace Agency.Test.Performance.RoadRunner
+namespace Agency.Network.RoadRunner
 {
 	/// <summary>
 	/// Vertex of the RoadRunner graph

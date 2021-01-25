@@ -6,7 +6,7 @@ using System.Numerics;
 using System.Text;
 using Agency.Mathmatics;
 
-namespace Agency.Test.Performance.RoadRunner
+namespace Agency.Network.RoadRunner
 {
 	[Serializable()]
 	public class RouteMap
