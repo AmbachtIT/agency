@@ -369,3 +369,9 @@ MigrationBackup/
 **/.idea/**/*.iml
 **/.idea/**/contentModel.xml
 **/.idea/**/modules.xml
+
+
+# Unity files
+unity/Agency/Library/
+unity/Agency/Logs/
+unity/Agency/Temp/
