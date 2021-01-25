@@ -4,6 +4,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agency", "Agency\Agency.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agency.Test", "Agency.Test\Agency.Test.csproj", "{EF3356FE-8F94-4B08-AF25-4423144A0152}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agency.Unity", "Agency.Unity\Agency.Unity.csproj", "{A58A6047-BE02-47EC-A55E-6EE02C04C7C8}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +20,9 @@ Global
 		{EF3356FE-8F94-4B08-AF25-4423144A0152}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF3356FE-8F94-4B08-AF25-4423144A0152}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF3356FE-8F94-4B08-AF25-4423144A0152}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A58A6047-BE02-47EC-A55E-6EE02C04C7C8}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A58A6047-BE02-47EC-A55E-6EE02C04C7C8}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A58A6047-BE02-47EC-A55E-6EE02C04C7C8}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A58A6047-BE02-47EC-A55E-6EE02C04C7C8}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
