@@ -19,6 +19,9 @@
         /// Distance in m
         /// </summary>
         public float Distance { get; set; }
+        
+        
+        public float Speed { get; set; }
 
         public Node GetOtherEnd(Node current)
         {

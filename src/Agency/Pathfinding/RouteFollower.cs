@@ -45,16 +45,17 @@ namespace Agency.Pathfinding
         /// </summary>
         /// <param name="distance"></param>
         /// <returns>true, if this is the last move</returns>
-        public bool MoveForward(float distance)
+        public bool MoveForward(float time)
         {
-            while (distance > 0)
+            while (time > 0)
             {
                 var left = edge.Distance - currentDistanceAlongEdge;
+                var distance = edge.Speed * time;
                 var toTravel = Math.Min(distance, left);
                 currentDistanceAlongEdge += toTravel;
                 CurrentPosition = from.Location + CurrentDirection * currentDistanceAlongEdge;
-                distance -= toTravel;
-                if (distance > 0)
+                time -= toTravel / edge.Speed;
+                if (time > 0)
                 {
                     if (!cursor.MoveNext())
                     {

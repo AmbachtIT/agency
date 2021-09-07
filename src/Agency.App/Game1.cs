@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
+using System.Text;
 using System.Threading;
 using Agency.Monogame;
 using Agency.Monogame.Rendering;
@@ -54,13 +55,19 @@ namespace Agency.App
             map = RouteMap.LoadBinary(@"D:\Data\OSM\0344\Routemap_0344.bin");
             network = CreateNetwork(map, Modality.Car);
             base.Initialize();
+
+            var thread = new Thread(LoopQueue);
+            thread.Start();
         }
 
+
+        private Queue<(Node, Node)> planningQueue = new Queue<(Node, Node)>();
+        private Queue<RouteFollower> followerQueue = new Queue<RouteFollower>(); 
         private List<RouteFollower> followers = new List<RouteFollower>();
 
-        public const int MaxFollowerCount = 100;
+        public const int MaxFollowerCount = 1000;
         private readonly Random random = new Random();
-
+        
         protected override void LoadContent()
         {
             var width = graphics.PreferredBackBufferWidth;
@@ -127,14 +134,20 @@ namespace Agency.App
                 }
             }
 
-            if (random.NextDouble() < 0.1)
+            ScheduleFollower();
+            ScheduleFollower();
+            ScheduleFollower();
+            
+            spawnCounter++;
+            if (spawnCounter == 100)
             {
-                SpawnFollower();
+                SpawnFollowers();
+                spawnCounter = 0;
             }
 
             foreach (var follower in followers.ToList())
             {
-                if (follower.MoveForward((float)gameTime.ElapsedGameTime.TotalSeconds * 100))
+                if (follower.MoveForward((float)gameTime.ElapsedGameTime.TotalSeconds * 4))
                 {
                     followers.Remove(follower);
                 }
@@ -143,23 +156,67 @@ namespace Agency.App
             base.Update(gameTime);
         }
 
-        private void SpawnFollower()
+        private int spawnCounter = 0;
+
+        private void ScheduleFollower()
         {
             if(followers.Count >= MaxFollowerCount) 
             {
                 return;
             }
 
-            var adapter = CreateAdapter(network);
-            var pathfinder = new Pathfinder<Pathfinding.Node, Pathfinding.Edge>(adapter)
+            lock (planningQueue)
             {
-                Start = PickRandomNode(),
-                Destination = PickRandomNode()
+                planningQueue.Enqueue((PickRandomNode(), PickRandomNode()));
+            }
+        }
+
+        private void SpawnFollowers()
+        {
+            lock (followerQueue)
+            {
+                while (followerQueue.TryDequeue(out var result))
+                {
+                    followers.Add(result);
+                }
+            }
+        }
+
+        private void LoopQueue()
+        {
+            while (true)
+            {
+                EmptyQueue();
+            }
+        }
+        
+        private void EmptyQueue()
+        {
+            (Node, Node) tup;
+            lock (planningQueue)
+            {
+                if(!planningQueue.TryDequeue(out tup))
+                {
+                    return;
+                }
+            }
+            
+            var start = tup.Item1;
+            var destination = tup.Item2;
+                
+            var adapter = CreateAdapter(network);
+            var pathfinder = new Pathfinder<Node, Pathfinding.Edge>(adapter)
+            {
+                Start = start,
+                Destination = destination
             };
             var result = pathfinder.Run();
             if (result.Route != null)
             {
-                followers.Add(new RouteFollower(result.Route));
+                lock (followerQueue)
+                {
+                    followerQueue.Enqueue(new RouteFollower(result.Route));
+                }
             }
         }
         
@@ -169,7 +226,7 @@ namespace Agency.App
             {
                 MaxId = () => network.Nodes.Max(n => n.Id) + 1,
                 GetEdges = node => node.Edges,
-                GetCost = edge => edge.Distance,
+                GetCost = edge => edge.Distance * edge.Speed,
                 GetNodeId = node => node.Id,
                 EstimateMinimumCost = (n1, n2) => System.Numerics.Vector2.Distance(n1.Location, n2.Location),
                 GetOtherNode = (edge, node) => edge.To
@@ -195,18 +252,29 @@ namespace Agency.App
             {
                 if (modality.IsAccessible(edge))
                 {
-                    result.Edges.Add(new Pathfinding.Edge(nodes[edge.FromId], nodes[edge.ToId])
+                    if(modality.IsValidEdge(null, edge.From, edge))
                     {
-                        Id = result.Edges.Count + 1,
-                        Distance = (float)edge.Distance,
-                    });
-                    result.Edges.Add(new Pathfinding.Edge(nodes[edge.ToId], nodes[edge.FromId])
+                        result.Edges.Add(new Pathfinding.Edge(nodes[edge.FromId], nodes[edge.ToId])
+                        {
+                            Id = result.Edges.Count + 1,
+                            Distance = (float)edge.Distance,
+                            Speed = edge.MaximumSpeed
+                        });
+                    }
+
+                    if(modality.IsValidEdge(null, edge.To, edge))
                     {
-                        Id = result.Edges.Count + 1,
-                        Distance = (float)edge.Distance,
-                    });
+                        result.Edges.Add(new Pathfinding.Edge(nodes[edge.FromId], nodes[edge.ToId])
+                        {
+                            Id = result.Edges.Count + 1,
+                            Distance = (float)edge.Distance * edge.MaximumSpeed,
+                            Speed = edge.MaximumSpeed
+                        });
+                    }
                 }
             }
+
+                        
             result.Nodes.RemoveAll(n => n.Edges.Count == 0);
             return result;
         }
