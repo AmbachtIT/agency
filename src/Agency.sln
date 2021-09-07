@@ -4,6 +4,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agency", "Agency\Agency.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agency.Test", "Agency.Test\Agency.Test.csproj", "{EF3356FE-8F94-4B08-AF25-4423144A0152}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agency.App", "Agency.App\Agency.App.csproj", "{B68A466C-2448-4E51-81FE-252B00C18C7A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Agency.Monogame", "Agency.Monogame\Agency.Monogame.csproj", "{7A16BBCF-F375-489A-8F3C-DCEBEEBACA63}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -18,5 +22,13 @@ Global
 		{EF3356FE-8F94-4B08-AF25-4423144A0152}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{EF3356FE-8F94-4B08-AF25-4423144A0152}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{EF3356FE-8F94-4B08-AF25-4423144A0152}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B68A466C-2448-4E51-81FE-252B00C18C7A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B68A466C-2448-4E51-81FE-252B00C18C7A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B68A466C-2448-4E51-81FE-252B00C18C7A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B68A466C-2448-4E51-81FE-252B00C18C7A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7A16BBCF-F375-489A-8F3C-DCEBEEBACA63}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7A16BBCF-F375-489A-8F3C-DCEBEEBACA63}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7A16BBCF-F375-489A-8F3C-DCEBEEBACA63}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7A16BBCF-F375-489A-8F3C-DCEBEEBACA63}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal
