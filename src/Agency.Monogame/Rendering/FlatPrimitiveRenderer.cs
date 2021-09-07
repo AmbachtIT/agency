@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Security.Cryptography.X509Certificates;
 using Agency.Rendering;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -28,10 +29,33 @@ namespace Agency.Monogame.Rendering
         private readonly Texture2D imageNode, imageLine;
         private readonly Vector2 nodeOrigin;
         private readonly float nodeSize;
+        private readonly Vector2 lineOrigin = new Vector2(0, 0.5f); 
 
         public void RenderLine(System.Numerics.Vector2 start, System.Numerics.Vector2 end, float thickness)
         {
-            
+            var delta = end - start;
+            var length = delta.Length();
+            var rotation = 0f;
+            if (length > 0)
+            {
+                rotation = (float)Math.Acos(delta.X / length);
+                if (delta.Y < 0)
+                {
+                    rotation = -rotation;
+                }
+            }
+
+            var scale = new Vector2(length, thickness / 2f);
+            batch.Draw(
+                imageLine, 
+                MonogameConverter.Convert(start), 
+                null, 
+                Color.White, 
+                rotation, 
+                lineOrigin, 
+                scale, 
+                SpriteEffects.None, 
+                0f);
         }
 
         public void RenderNode(System.Numerics.Vector2 location, float radius)
