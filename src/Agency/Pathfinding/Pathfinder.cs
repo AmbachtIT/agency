@@ -72,11 +72,11 @@ namespace Agency.Pathfinding
 				if (current == Destination)
 				{
 					// Found our destination
-					CreateRoute(Destination);
 					return new Result()
 					{
 						Type = "ExactRouteFound",
-						NodeCount = currentInfo.NodeCount()
+						NodeCount = currentInfo.NodeCount(),
+						Route = CreateRoute(currentInfo)
 					};
 				}
 
@@ -130,17 +130,27 @@ namespace Agency.Pathfinding
 			};
 		}
 
-		private void CreateRoute(TNode destination) {
-			//this.Result = Route.FromNodeInfo(Intermediate.GetInfo(Start), Intermediate.GetInfo(destination));
+		private Route<TNode, TEdge> CreateRoute(NodeVisit destination)
+		{
+			var result = new Route<TNode, TEdge>();
+			var visit = destination;
+			while (visit.PredecessingEdge != null)
+			{
+				result.PrependLeg(visit.PredecessingEdge, visit.Node);
+				visit = visit.PredecessingNodeVisit;
+			}
+
+			result.SetStart(visit.Node);
+			return result;
 		}
 
 
 		private void Init() {
 			this.fringe = new FastPriorityQueue<NodeVisit>(network.MaxId());
 			this.Intermediate = new IntermediateResults
-			                    {
-			                    	Vertices = CreateNodeVisitContainer()
-			                    };
+            {
+                Vertices = CreateNodeVisitContainer()
+            };
 
 
 			var start = new NodeVisit() {
