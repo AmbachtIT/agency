@@ -17,16 +17,21 @@ namespace Agency.Rendering
         {
             foreach (var vertex in map.Vertices)
             {
-                primitives.RenderNode(PanZoom.ToScreen(vertex.Location), 4f * PanZoom.Scale);
+                primitives.RenderNode(ToScreen(vertex.Location), 4f * PanZoom.Scale);
             }
 
             foreach (var edge in map.Edges)
             {
-                primitives.RenderLine(PanZoom.ToScreen(edge.From.Location), PanZoom.ToScreen(edge.To.Location), 8f * PanZoom.Scale);
+                primitives.RenderLine(ToScreen(edge.From.Location), ToScreen(edge.To.Location), 8f * PanZoom.Scale);
             }
         }
+
+        public Vector2 ToScreen(Vector2 v)
+        {
+            return PanZoom.ToScreen(new Vector2(v.X, -v.Y));
+        }
         
-        public PanZoomService PanZoom { get; set; }
+        public WorldView PanZoom { get; set; }
 
 
         

@@ -20,7 +20,7 @@ namespace Agency.App
         private IFlatPrimitiveRenderer primitiveRenderer;
         private RouteMapRenderer routeMapRenderer;
         private RouteMap map;
-        private PanZoomService panZoom;
+        private WorldView panZoom;
         private Vector2? previousPanPosition = null;
         private int? scrollWheelValue = null;
         
@@ -55,9 +55,9 @@ namespace Agency.App
             var width = graphics.PreferredBackBufferWidth;
             var height = graphics.PreferredBackBufferHeight;
 
-            panZoom = new PanZoomService()
+            panZoom = new WorldView()
             {
-                Center = map.Bounds.Center,
+                Center = new System.Numerics.Vector2(map.Bounds.Center.X, -map.Bounds.Center.Y),
                 Scale = 0.02f,
                 ScreenCenter = new System.Numerics.Vector2(width / 2f, height / 2f)
             };

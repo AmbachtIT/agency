@@ -11,8 +11,11 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="Content\obj\**" />
-    <EmbeddedResource Remove="Content\obj\**" />
+    <Compile Remove="Content\bin\**" />
     <None Remove="Content\obj\**" />
+    <None Remove="Content\bin\**" />
+    <EmbeddedResource Remove="Content\obj\**" />
+    <EmbeddedResource Remove="Content\bin\**" />
   </ItemGroup>
   <ItemGroup>
     <None Remove="Icon.ico" />
@@ -24,6 +27,7 @@
   </ItemGroup>
   <ItemGroup>
     <MonoGameContentReference Include="Content\Content.mgcb" />
+    <MonoGameContentReference Remove="Content\bin\**" />
   </ItemGroup>
   <ItemGroup>
     <TrimmerRootAssembly Include="Microsoft.Xna.Framework.Content.ContentTypeReader" Visible="false" />

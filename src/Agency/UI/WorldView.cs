@@ -4,7 +4,7 @@ using System.Security.Cryptography;
 
 namespace Agency.UI
 {
-    public class PanZoomService
+    public class WorldView
     {
         /// <summary>
         /// Center of the map, in map coordinates
@@ -23,7 +23,7 @@ namespace Agency.UI
 
         public void Zoom(float amount)
         {
-            Scale *= (float)Math.Pow(1.1, amount);
+            Scale *= (float)Math.Pow(ZoomSpeed, amount);
             Scale = Math.Max(MinScale, Scale);
             Scale = Math.Min(MaxScale, Scale);
         }
