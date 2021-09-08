@@ -53,7 +53,7 @@ namespace Agency.App
         protected override void Initialize()
         {
             map = RouteMap.LoadBinary(@"D:\Data\OSM\0344\Routemap_0344.bin");
-            network = CreateNetwork(map, Modality.Car);
+            network = map.CreateNetwork(Modality.Car);
             base.Initialize();
 
             var thread = new Thread(LoopQueue);
@@ -186,11 +186,13 @@ namespace Agency.App
         {
             while (true)
             {
-                EmptyQueue();
+                ProcessItemFromQueue();
             }
         }
+
+        private List<TimeSpan> durations = new List<TimeSpan>();
         
-        private void EmptyQueue()
+        private void ProcessItemFromQueue()
         {
             (Node, Node) tup;
             lock (planningQueue)
@@ -200,17 +202,28 @@ namespace Agency.App
                     return;
                 }
             }
-            
+
+            var startTime = DateTime.UtcNow;
             var start = tup.Item1;
             var destination = tup.Item2;
                 
-            var adapter = CreateAdapter(network);
+            var adapter = network.CreateAdapter(150 / 3.6f);
             var pathfinder = new Pathfinder<Node, Pathfinding.Edge>(adapter)
             {
                 Start = start,
                 Destination = destination
             };
             var result = pathfinder.Run();
+            var duration = DateTime.UtcNow - startTime;
+            durations.Add(duration);
+
+            if (durations.Count == 100)
+            {
+                var average = durations.Select(t => t.TotalMilliseconds).Average();
+                Console.WriteLine($"Average: {average:0}ms");
+                durations.Clear();
+            }
+            
             if (result.Route != null)
             {
                 lock (followerQueue)
@@ -220,66 +233,7 @@ namespace Agency.App
             }
         }
         
-        private Pathfinder<Pathfinding.Node, Pathfinding.Edge>.NetworkAdapter CreateAdapter(Pathfinding.Network network)
-        {
-            return new Pathfinder<Pathfinding.Node, Pathfinding.Edge>.NetworkAdapter()
-            {
-                MaxId = () => network.Nodes.Max(n => n.Id) + 1,
-                GetEdges = node => node.Edges,
-                GetCost = edge => edge.Distance * edge.Speed,
-                GetNodeId = node => node.Id,
-                EstimateMinimumCost = (n1, n2) => System.Numerics.Vector2.Distance(n1.Location, n2.Location),
-                GetOtherNode = (edge, node) => edge.To
-            };
-        }
-        
-        private Pathfinding.Network CreateNetwork(RouteMap map, Modality modality)
-        {
-            var nodes =
-                map
-                    .Vertices
-                    .ToDictionary(v => v.Id, v => new Node()
-                    {
-                        Id = v.Id,
-                        Location = v.Location
-                    });
-            var result = new Pathfinding.Network()
-            {
-                Nodes = nodes.Values.ToList()
-            };
-            
-            foreach (var edge in map.Edges)
-            {
-                if (modality.IsAccessible(edge))
-                {
-                    if(modality.IsValidEdge(null, edge.From, edge))
-                    {
-                        result.Edges.Add(new Pathfinding.Edge(nodes[edge.FromId], nodes[edge.ToId])
-                        {
-                            Id = result.Edges.Count + 1,
-                            Distance = (float)edge.Distance,
-                            Speed = edge.MaximumSpeed
-                        });
-                    }
-
-                    if(modality.IsValidEdge(null, edge.To, edge))
-                    {
-                        result.Edges.Add(new Pathfinding.Edge(nodes[edge.FromId], nodes[edge.ToId])
-                        {
-                            Id = result.Edges.Count + 1,
-                            Distance = (float)edge.Distance * edge.MaximumSpeed,
-                            Speed = edge.MaximumSpeed
-                        });
-                    }
-                }
-            }
-
-                        
-            result.Nodes.RemoveAll(n => n.Edges.Count == 0);
-            return result;
-        }
-
-        private Pathfinding.Node PickRandomNode()
+        private Node PickRandomNode()
         {
             return network.Nodes[random.Next(network.Nodes.Count)];
         }

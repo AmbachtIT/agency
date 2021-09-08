@@ -18,8 +18,8 @@ namespace Agency.Test.Performance
         {
             var map = LoadMap();
             TestContext.WriteLine($"Testing map with {map.Vertices.Count} vertices");
-            var network = CreateNetwork(map, Modality.Walk);
-            var pathfinder = new Pathfinder<Node, Edge>(CreateAdapter(network));
+            var network = map.CreateNetwork(Modality.Walk);
+            var pathfinder = new Pathfinder<Node, Edge>(network.CreateAdapter(150 / 3.6f));
             for (var j = 0; j < 2; j++)
             {
                 var total = TimeSpan.Zero;
@@ -36,10 +36,6 @@ namespace Agency.Test.Performance
                     {
                         TestContext.WriteLine($"{i}: {result}. Took {duration.TotalMilliseconds:0.0}ms");
                     }                    
-                    //if (distances.TryGetValue(i, out var correct))
-                    //{
-                    //    Assert.AreEqual(correct, (int)Math.Round(result.Distance));
-                    //}
                 }
                 
                 if (j == 1)
@@ -62,53 +58,7 @@ namespace Agency.Test.Performance
             { 9, 12437 },
         };
 
-        private Pathfinder<Node, Edge>.NetworkAdapter CreateAdapter(Pathfinding.Network network)
-        {
-            return new Pathfinder<Node, Edge>.NetworkAdapter()
-            {
-                MaxId = () => network.Nodes.Max(n => n.Id) + 1,
-                GetEdges = node => node.Edges,
-                GetCost = edge => edge.Distance,
-                GetNodeId = node => node.Id,
-                EstimateMinimumCost = (n1, n2) => Vector2.Distance(n1.Location, n2.Location),
-                GetOtherNode = (edge, node) => edge.To
-            };
-        }
-        
-        private Pathfinding.Network CreateNetwork(RouteMap map, Modality modality)
-        {
-            var nodes =
-                map
-                    .Vertices
-                    .ToDictionary(v => v.Id, v => new Node()
-                    {
-                        Id = v.Id,
-                        Location = v.Location
-                    });
-            var result = new Pathfinding.Network()
-            {
-                Nodes = nodes.Values.ToList()
-            };
-            
-            foreach (var edge in map.Edges)
-            {
-                if (modality.IsAccessible(edge))
-                {
-                    result.Edges.Add(new Pathfinding.Edge(nodes[edge.FromId], nodes[edge.ToId])
-                    {
-                        Id = result.Edges.Count + 1,
-                        Distance = (float)edge.Distance,
-                    });
-                    result.Edges.Add(new Pathfinding.Edge(nodes[edge.ToId], nodes[edge.FromId])
-                    {
-                        Id = result.Edges.Count + 1,
-                        Distance = (float)edge.Distance,
-                    });
-                }
-            }
-            result.Nodes.RemoveAll(n => n.Edges.Count == 0);
-            return result;
-        }
+
 
         private RouteMap LoadMap()
         {
