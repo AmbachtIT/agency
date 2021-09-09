@@ -45,18 +45,7 @@ namespace Agency.Test.Performance
             }
         }
         
-        private readonly Dictionary<int, int> distances = new Dictionary<int, int>()
-        {
-            { 0, 7647 },
-            { 1, 3300 },
-            { 2, 0 },
-            { 4, 13299 },
-            { 5, 7690 },
-            { 6, 8994 },
-            { 7, 8591 },
-            { 8, 4055 },
-            { 9, 12437 },
-        };
+
 
 
 
