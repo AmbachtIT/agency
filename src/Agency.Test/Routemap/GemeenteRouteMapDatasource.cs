@@ -18,6 +18,11 @@ namespace Agency.Test.Routemap
 
         public IEnumerable<Gemeente> Gemeentes()
         {
+            return GemeentesCore().OrderBy(g => g.Code);
+        }
+        
+        private IEnumerable<Gemeente> GemeentesCore()
+        {
             foreach (var dir in Directory.EnumerateDirectories(path))
             {
                 var info = new DirectoryInfo(dir);

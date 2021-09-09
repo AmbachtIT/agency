@@ -4,6 +4,11 @@ namespace Agency.Pathfinding
 {
     public static class Extensions
     {
+
+        public static Pathfinder<Node, Edge> CreatePathfinder(this Network network, float maximumSpeed)
+        {
+            return new Pathfinder<Node, Edge>(network.CreateAdapter(maximumSpeed));
+        }
         
         public static Pathfinder<Node, Edge>.NetworkAdapter CreateAdapter(this Network network, float maximumSpeed)
         {

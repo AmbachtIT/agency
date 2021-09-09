@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using Agency.Common;
 using Agency.Network.RoadRunner;
+using Agency.Test.Extensibility;
 using NUnit.Framework;
 using OxyPlot;
 using OxyPlot.Axes;
@@ -55,8 +57,10 @@ namespace Agency.Test.Routemap
         }
 
 
-        private void PlotGemeente(Func<RouteMap, (int, int)> getValue, string title, string filename)
+        private void PlotGemeente(Func<RouteMap, (int, int)> getValue, string title, string filename, Func<Gemeente, bool> shouldInclude = null)
         {
+            shouldInclude ??= g => true;
+            
             var plot = new PlotModel()
             {
                 Title = title
@@ -64,8 +68,7 @@ namespace Agency.Test.Routemap
             var seriesByIndex = new Dictionary<int, ScatterSeries>();
             
             var source = new GemeenteRouteMapDatasource(@"D:\Data\OpenFietsModel\Gemeentes");
-            var byCount = new Dictionary<string, int>();
-            foreach (var gemeente in source.Gemeentes())
+            foreach (var gemeente in source.Gemeentes().Where(shouldInclude))
             {
                 var map = source.LoadMap(gemeente);
                 if (map != null)
@@ -84,7 +87,6 @@ namespace Agency.Test.Routemap
 
                     var (x, y) = getValue(map);
                     series.Points.Add(new ScatterPoint(x, y, 3));
-                    byCount.Add(gemeente.Name, x);
                 }
             }
             var exporter = new PngExporter()
@@ -94,11 +96,6 @@ namespace Agency.Test.Routemap
                 Background = OxyColors.White
             };
             exporter.ExportToFile(plot, @"C:\Projects\Agency\doc\performance\" + filename);
-
-            foreach (var kv in byCount.OrderByDescending(k => k.Value))
-            {
-                TestContext.WriteLine($"{kv.Key}: {kv.Value}");
-            }
         }
 
         private int GetColorIndex(Gemeente gemeente)
@@ -116,7 +113,7 @@ namespace Agency.Test.Routemap
         {
             "Amsterdam",
             "Rotterdam",
-            "Den Haag",
+            "'s-Gravenhage",
             "Eindhoven",
             "Tilburg",
             "Groningen",
@@ -138,9 +135,31 @@ namespace Agency.Test.Routemap
             "Maastricht",
             "Dordrecht",
             "Ede",
+            "Noordoostpolder",
+            "Twenterand",
+            "Tiel"
         };
 
-        private static IEnumerable<Gemeente> AllGemeentes()
+        [Test(), Explicit()]
+        public void Benchmark()
+        {
+            var checksum = new Checksum();
+            PlotGemeente(map =>
+            {
+                var network = map.CreateNetwork(Modality.Car);
+                var benchmark = new Benchmark()
+                {
+                    Network = network
+                };
+                var result = benchmark.Run();
+                checksum.Add(result.Checksum);
+                return (network.Nodes.Count, (int)result.Stats.Average);
+            }, $"Average pathfinding duration", $"duration.png", g => importantGemeentes.Contains(g.Name));
+            TestContext.WriteLine($"Checksum: {checksum}");
+            Assert.AreEqual(38616, checksum.Value);
+        }
+
+        private IEnumerable<Gemeente> AllGemeentes()
         {
             var source = new GemeenteRouteMapDatasource(@"D:\Data\OpenFietsModel\Gemeentes");
             foreach (var gemeente in source.Gemeentes().OrderBy(g => g.Code))
