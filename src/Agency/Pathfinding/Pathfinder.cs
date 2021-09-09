@@ -17,7 +17,10 @@ namespace Agency.Pathfinding
 		public Pathfinder(NetworkAdapter network)
 		{
 			this.network = network;
-			this.CreateNodeVisitContainer = () => new NodeVisitArray(network.MaxId());
+			var maxId = network.MaxId();
+			this.CreateNodeVisitContainer = () => new NodeVisitArray(maxId);
+			this.fringe = new FastPriorityQueue<NodeVisit>(maxId);
+
 		}
 
 		private readonly NetworkAdapter network;
@@ -146,7 +149,7 @@ namespace Agency.Pathfinding
 
 
 		private void Init() {
-			this.fringe = new FastPriorityQueue<NodeVisit>(network.MaxId());
+			this.fringe.Clear();
 			this.Intermediate = new IntermediateResults
             {
                 Vertices = CreateNodeVisitContainer()

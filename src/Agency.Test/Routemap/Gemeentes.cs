@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Agency.Common;
+using Agency.Mathmatics;
 using Agency.Network.RoadRunner;
 using Agency.Test.Extensibility;
 using NUnit.Framework;
@@ -144,6 +145,7 @@ namespace Agency.Test.Routemap
         public void Benchmark()
         {
             var checksum = new Checksum();
+            var durations = new List<float>();
             PlotGemeente(map =>
             {
                 var network = map.CreateNetwork(Modality.Car);
@@ -153,8 +155,12 @@ namespace Agency.Test.Routemap
                 };
                 var result = benchmark.Run();
                 checksum.Add(result.Checksum);
+                durations.AddRange(result.Stats.Sorted());
                 return (network.Nodes.Count, (int)result.Stats.Average);
             }, $"Average pathfinding duration", $"duration.png", g => importantGemeentes.Contains(g.Name));
+            var stats = new StatRange(durations);
+            TestContext.WriteLine(stats.ToString());
+            TestContext.WriteLine($"p95: {stats.GetPercentile(95):0.0}ms");
             TestContext.WriteLine($"Checksum: {checksum}");
             Assert.AreEqual(38616, checksum.Value);
         }

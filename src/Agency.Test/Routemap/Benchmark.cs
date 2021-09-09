@@ -27,10 +27,10 @@ namespace Agency.Test.Routemap
             var durations = new List<float>();
             var random = new Random(Seed);
             var checksum = new Checksum();
+            var pathfinder = Network.CreatePathfinder(MaximumSpeed);
             for (var i = 0; i < Iterations; i++)
             {
                 var start = DateTime.UtcNow;
-                var pathfinder = Network.CreatePathfinder(MaximumSpeed);
                 pathfinder.Start = Network.Nodes.PickRandom(random);
                 pathfinder.Destination = Network.Nodes.PickRandom(random);
                 var result = pathfinder.Run();
