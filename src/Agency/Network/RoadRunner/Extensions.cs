@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System;
+using System.Linq;
 using Agency.Pathfinding;
 
 namespace Agency.Network.RoadRunner
@@ -32,17 +33,17 @@ namespace Agency.Network.RoadRunner
                         {
                             Id = result.Edges.Count + 1,
                             Distance = (float)edge.Distance,
-                            Speed = edge.MaximumSpeed / 3.6f
+                            Speed = GetSpeed(edge, modality)
                         });
                     }
 
                     if(modality.IsValidEdge(null, edge.To, edge))
                     {
-                        result.Edges.Add(new Pathfinding.Edge(nodes[edge.FromId], nodes[edge.ToId])
+                        result.Edges.Add(new Pathfinding.Edge(nodes[edge.ToId], nodes[edge.FromId])
                         {
                             Id = result.Edges.Count + 1,
                             Distance = (float)edge.Distance,
-                            Speed = edge.MaximumSpeed / 3.6f
+                            Speed = GetSpeed(edge, modality)
                         });
                     }
                 }
@@ -51,6 +52,13 @@ namespace Agency.Network.RoadRunner
                         
             result.Nodes.RemoveAll(n => n.Edges.Count == 0);
             return result;
+        }
+
+        private static float GetSpeed(Edge edge, Modality modality)
+        {
+            var speed = (float)Math.Min(edge.MaximumSpeed, modality.MaxSpeed);
+
+            return speed / 3.6f;
         }
         
     }

@@ -15,24 +15,41 @@ namespace Agency.Pathfinding
         private readonly Route<Node, Edge> route;
         private readonly Route<Node, Edge>.Cursor cursor;
 
+        public Route<Node, Edge> Route => route;
+
         private void UpdateCursorPosition(Route<Node, Edge>.Cursor cursor)
         {
             from = route.GetFrom(cursor);
             to = route.GetTo(cursor);
             edge = route.GetEdge(cursor);
-            
-            this.CurrentPosition = from.Location;
+            currentDistanceAlongEdge = 0;
+
+            SetPosition(from.Location);
             this.CurrentDirection = to.Location - from.Location;
             if (CurrentDirection.X != 0 || CurrentDirection.Y != 0)
             {
                 CurrentDirection /= CurrentDirection.Length();
             }
         }
-        
-        
+
+        private void SetPosition(Vector2 position)
+        {
+            CurrentPosition = position;
+        }
+
+
+        /// <summary>
+        /// Current position of follower
+        /// </summary>
         public Vector2 CurrentPosition { get; private set; }
         
+        
+        /// <summary>
+        /// Normalized direction of travel
+        /// </summary>
         public Vector2 CurrentDirection { get; private set; }
+        
+        
 
         private float currentDistanceAlongEdge;
         private Node from, to;
@@ -49,20 +66,18 @@ namespace Agency.Pathfinding
         {
             while (time > 0)
             {
-                var left = edge.Distance - currentDistanceAlongEdge;
-                var distance = edge.Speed * time;
-                var toTravel = Math.Min(distance, left);
-                currentDistanceAlongEdge += toTravel;
-                CurrentPosition = from.Location + CurrentDirection * currentDistanceAlongEdge;
-                time -= toTravel / edge.Speed;
-                if (time > 0)
+                var leftOnEdge = edge.Distance - currentDistanceAlongEdge;
+                var distanceAlongCurrentEdge = edge.Speed * time;
+                var distanceToTravel = Math.Min(distanceAlongCurrentEdge, leftOnEdge);
+                currentDistanceAlongEdge += distanceToTravel;
+                SetPosition(from.Location + CurrentDirection * currentDistanceAlongEdge);
+                time -= (distanceToTravel / edge.Speed);
+                if (time > 1e-8)
                 {
                     if (!cursor.MoveNext())
                     {
                         return true;
                     }
-
-                    currentDistanceAlongEdge = 0;
                     UpdateCursorPosition(cursor);
                 }
             }

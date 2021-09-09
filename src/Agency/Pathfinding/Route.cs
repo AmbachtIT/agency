@@ -1,11 +1,12 @@
-﻿using System.Collections.Generic;
+﻿using System.Collections;
+using System.Collections.Generic;
 
 namespace Agency.Pathfinding
 {
-    public class Route<TNode, TEdge>
+    public class Route<TNode, TEdge> : IEnumerable<Route<TNode, TEdge>.Leg>
     {
         
-        internal class Leg
+        public class Leg
         {
             public TNode Node { get; set; }
             public TEdge Edge { get; set; }
@@ -102,6 +103,19 @@ namespace Agency.Pathfinding
         public Cursor CreateCursor()
         {
             return new Cursor(legs.First);
+        }
+
+        public IEnumerator<Leg> GetEnumerator()
+        {
+            foreach (var leg in legs)
+            {
+                yield return leg;
+            }
+        }
+
+        IEnumerator IEnumerable.GetEnumerator()
+        {
+            return GetEnumerator();
         }
     }
 }

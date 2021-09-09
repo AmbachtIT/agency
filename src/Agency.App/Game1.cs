@@ -25,6 +25,8 @@ namespace Agency.App
 
         private IFlatPrimitiveRenderer primitiveRenderer;
         private RouteMapRenderer routeMapRenderer;
+        private RouteRenderer routeRenderer;
+        private RouteFollowerRenderer routeFollowerRenderer;
         private RouteMap map;
         private Pathfinding.Network network;
         private WorldView panZoom;
@@ -65,7 +67,7 @@ namespace Agency.App
         private Queue<RouteFollower> followerQueue = new Queue<RouteFollower>(); 
         private List<RouteFollower> followers = new List<RouteFollower>();
 
-        public const int MaxFollowerCount = 1000;
+        public const int MaxFollowerCount = 1;
         private readonly Random random = new Random();
         
         protected override void LoadContent()
@@ -86,6 +88,14 @@ namespace Agency.App
             var imageLine = Content.Load<Texture2D>("images/pixel-white");
             primitiveRenderer = new FlatPrimitiveRenderer(_spriteBatch, imageNode, imageLine);
             routeMapRenderer = new RouteMapRenderer(primitiveRenderer)
+            {
+                PanZoom = panZoom
+            };
+            routeRenderer = new RouteRenderer(primitiveRenderer)
+            {
+                PanZoom = panZoom
+            };
+            routeFollowerRenderer = new RouteFollowerRenderer(primitiveRenderer)
             {
                 PanZoom = panZoom
             };
@@ -134,11 +144,9 @@ namespace Agency.App
                 }
             }
 
-            ScheduleFollower();
-            ScheduleFollower();
-            ScheduleFollower();
-            
+
             spawnCounter++;
+            ScheduleFollower();
             if (spawnCounter == 100)
             {
                 SpawnFollowers();
@@ -147,7 +155,7 @@ namespace Agency.App
 
             foreach (var follower in followers.ToList())
             {
-                if (follower.MoveForward((float)gameTime.ElapsedGameTime.TotalSeconds * 4))
+                if (follower.MoveForward((float)gameTime.ElapsedGameTime.TotalSeconds * 20))
                 {
                     followers.Remove(follower);
                 }
@@ -244,10 +252,11 @@ namespace Agency.App
 
             _spriteBatch.Begin();
             routeMapRenderer.Render(map);
+
             foreach (var follower in followers)
             {
-                var position = routeMapRenderer.ToScreen(follower.CurrentPosition);
-                primitiveRenderer.RenderNode(position, 40f * routeMapRenderer.PanZoom.Scale);                
+                //routeRenderer.Render(follower.Route);
+                routeFollowerRenderer.Render(follower);
             }
             
             _spriteBatch.End();

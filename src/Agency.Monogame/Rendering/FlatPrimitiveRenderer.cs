@@ -31,7 +31,7 @@ namespace Agency.Monogame.Rendering
         private readonly float nodeSize;
         private readonly Vector2 lineOrigin = new Vector2(0, 0.5f); 
 
-        public void RenderLine(System.Numerics.Vector2 start, System.Numerics.Vector2 end, float thickness)
+        public void RenderLine(System.Numerics.Vector2 start, System.Numerics.Vector2 end, float thickness, System.Drawing.Color color)
         {
             var delta = end - start;
             var length = delta.Length();
@@ -50,7 +50,7 @@ namespace Agency.Monogame.Rendering
                 imageLine, 
                 MonogameConverter.Convert(start), 
                 null, 
-                Color.White, 
+                MonogameConverter.Convert(color), 
                 rotation, 
                 lineOrigin, 
                 scale, 
@@ -58,10 +58,10 @@ namespace Agency.Monogame.Rendering
                 0f);
         }
 
-        public void RenderNode(System.Numerics.Vector2 location, float radius)
+        public void RenderNode(System.Numerics.Vector2 location, float radius, System.Drawing.Color color)
         {
             var position = new Vector2(location.X, location.Y);
-            batch.Draw(imageNode, position, null, Color.White, 0f, nodeOrigin, radius / nodeSize, SpriteEffects.None, 0);
+            batch.Draw(imageNode, position, null, MonogameConverter.Convert(color), 0f, nodeOrigin, radius / nodeSize, SpriteEffects.None, 0);
         }
 
     }
